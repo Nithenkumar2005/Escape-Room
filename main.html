@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Escape Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .screen.active {
+            display: block;
+            animation: screenFadeIn 0.8s ease-out;
+        }
+
+        @keyframes screenFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px #00ff88;
+            }
+            to {
+                text-shadow: 0 0 30px #00ff88, 0 0 40px #00ff88;
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #88ffaa;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00aa44, #00ff88);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+            background: linear-gradient(45deg, #00ff88, #88ffaa);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .timer-container {
+            position: absolute;
+            top: -50px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0044;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff0044;
+            text-shadow: 0 0 10px #ff0044;
+        }
+
+        .timer-bar {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            height: 4px;
+            background: #ff0044;
+            border-radius: 2px;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px #ff0044;
+        }
+
+        .puzzle-content {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .terminal {
+            background: #000;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            animation: typewriter 0.5s ease-out;
+        }
+
+        @keyframes typewriter {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .prompt {
+            color: #00ff88;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .success {
+            color: #44ff44;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff88;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #00ff88;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .input-field:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+            border-color: #88ffaa;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00aa44, #00ff88);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .puzzle-number {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .hint {
+            color: #88ffaa;
+            font-style: italic;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .game-over {
+            color: #ff4444;
+            text-shadow: 0 0 20px #ff4444;
+        }
+
+        .victory {
+            color: #44ff44;
+            text-shadow: 0 0 20px #44ff44;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .screen {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .timer-container {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .puzzle-number {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 20px;
+            }
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Title Screen -->
+        <div class="screen active" id="titleScreen">
+            <h1 class="title">CYBER ESCAPE</h1>
+            <p class="subtitle">Neural Network Breach Detected</p>
+            <p>You have been trapped in a digital prison. Solve 5 security protocols to escape before the system locks down permanently.</p>
+            <button class="btn" onclick="startGame()">INITIATE BREACH</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="screen" id="gameScreen">
+            <div class="puzzle-number" id="puzzleNumber">1</div>
+            <div class="timer-container">
+                <div class="timer-bar" id="timerBar"></div>
+                <span id="timerDisplay">60</span>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <div class="puzzle-content" id="puzzleContent">
+                <!-- Puzzle content will be inserted here -->
+            </div>
+
+            <div class="input-group">
+                <input type="text" class="input-field" id="answerInput" placeholder="Enter your answer...">
+                <br><br>
+                <button class="btn" onclick="submitAnswer()">SUBMIT</button>
+                <button class="btn" onclick="skipPuzzle()" style="background: linear-gradient(45deg, #666, #999);">SKIP (-10s)</button>
+            </div>
+
+            <div class="terminal" id="terminal">
+                <div class="terminal-line prompt">> System Status: ACTIVE</div>
+                <div class="terminal-line prompt">> Security Level: MAXIMUM</div>
+                <div class="terminal-line prompt">> Breach Attempts: 0/5</div>
+                <div class="terminal-line prompt">> Awaiting input...</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="screen" id="gameOverScreen">
+            <h1 class="title game-over">SYSTEM LOCKDOWN</h1>
+            <p class="subtitle">Security Protocol Failed</p>
+            <p>The neural firewall has detected your intrusion. Your digital essence has been trapped forever in the data stream.</p>
+            <div class="stats" id="gameOverStats"></div>
+            <button class="btn" onclick="restartGame()">RETRY BREACH</button>
+        </div>
+
+        <!-- Victory Screen -->
+        <div class="screen" id="victoryScreen">
+            <h1 class="title victory">BREACH SUCCESSFUL</h1>
+            <p class="subtitle">Welcome to Freedom</p>
+            <p>You have successfully bypassed all security protocols and escaped the digital prison. The system is yours to command.</p>
+            <div class="stats" id="victoryStats"></div>
+            <button class="btn" onclick="restartGame()">INITIATE NEW BREACH</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentPuzzle = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let totalTime = 0;
+        let puzzlesSolved = 0;
+        let startTime;
+
+        // Puzzle definitions
+        const puzzles = [
+            {
+                type: 'riddle',
+                question: 'SECURITY RIDDLE #1',
+                description: 'I speak without a mouth and hear without ears. I have no body, but come alive with wind. What am I?',
+                answer: 'echo',
+                hint: 'Think about sound reflections...'
+            },
+            {
+                type: 'sequence',
+                question: 'PATTERN ANALYSIS #2',
+                description: 'Complete the sequence: 2, 6, 18, 54, ?',
+                answer: '162',
+                hint: 'Each number is multiplied by 3'
+            },
+            {
+                type: 'unscramble',
+                question: 'PASSWORD RECOVERY #3',
+                description: 'Unscramble the system password: TYCRUIES',
+                answer: 'security',
+                hint: 'This word relates to system protection'
+            },
+            {
+                type: 'terminal',
+                question: 'SYSTEM ACCESS #4',
+                description: 'Find the hidden access code in the file system below:',
+                terminalData: [
+                    '> ls -la',
+                    'drwxr-xr-x  user  staff   system/',
+                    '-rw-r--r--  user  staff   config.txt',
+                    '-rw-r--r--  user  staff   access_7X9K.log',
+                    '-rwxr-xr-x  user  staff   firewall.exe',
+                    '> cat access_7X9K.log',
+                    '[2025-08-01] Access attempt from 192.168.1.100',
+                    '[2025-08-01] Security key generated: ALPHA',
+                    '[2025-08-01] Validation code: 4782',
+                    '[2025-08-01] Session timeout in 60 seconds'
+                ],
+                answer: '4782',
+                hint: 'Look for the validation code in the log file'
+            },
+            {
+                type: 'code',
+                question: 'CODE ANALYSIS #5',
+                description: 'What value will this JavaScript function return?\n\nfunction mystery(x) {\n    if (x <= 1) return 1;\n    return x * mystery(x - 1);\n}\n\nmystery(4);',
+                answer: '24',
+                hint: 'This is a recursive factorial function: 4! = 4×3×2×1'
+            }
+        ];
+
+        function startGame() {
+            currentPuzzle = 0;
+            puzzlesSolved = 0;
+            totalTime = 0;
+            startTime = Date.now();
+            showScreen('gameScreen');
+            loadPuzzle();
+            startTimer();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function loadPuzzle() {
+            if (currentPuzzle >= puzzles.length) {
+                endGame(true);
+                return;
+            }
+
+            const puzzle = puzzles[currentPuzzle];
+            document.getElementById('puzzleNumber').textContent = currentPuzzle + 1;
+            document.getElementById('progressFill').style.width = `${(currentPuzzle / puzzles.length) * 100}%`;
+
+            let content = `
+                <h2>${puzzle.question}</h2>
+                <p style="margin: 20px 0; font-size: 1.1rem;">${puzzle.description}</p>
+            `;
+
+            if (puzzle.type === 'terminal' && puzzle.terminalData) {
+                content += '<div class="terminal">';
+                puzzle.terminalData.forEach(line => {
+                    content += `<div class="terminal-line">${line}</div>`;
+                });
+                content += '</div>';
+            }
+
+            if (puzzle.type === 'code') {
+                content += `<div class="terminal"><pre style="color: #00ff88; white-space: pre-wrap;">${puzzle.description.split('\n\n')[1]}</pre></div>`;
+                content = content.replace(puzzle.description, puzzle.description.split('\n\n')[0]);
+            }
+
+            content += `<div class="hint">${puzzle.hint}</div>`;
+
+            document.getElementById('puzzleContent').innerHTML = content;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+
+            timeLeft = 60;
+            updateTimerDisplay();
+            addTerminalLine(`> Loading Security Protocol ${currentPuzzle + 1}...`);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                totalTime++;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timerDisplay').textContent = timeLeft;
+            const percentage = (timeLeft / 60) * 100;
+            document.getElementById('timerBar').style.width = `${percentage}%`;
+            
+            // Change color based on time left
+            const timerBar = document.getElementById('timerBar');
+            if (timeLeft <= 10) {
+                timerBar.style.background = '#ff0044';
+                timerBar.style.boxShadow = '0 0 10px #ff0044';
+            } else if (timeLeft <= 20) {
+                timerBar.style.background = '#ff8800';
+                timerBar.style.boxShadow = '0 0 10px #ff8800';
+            } else {
+                timerBar.style.background = '#ff0044';
+                timerBar.style.boxShadow = '0 0 10px #ff0044';
+            }
+        }
+
+        function submitAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = puzzles[currentPuzzle].answer.toLowerCase();
+
+            if (userAnswer === correctAnswer) {
+                puzzlesSolved++;
+                addTerminalLine(`> ACCESS GRANTED - Protocol ${currentPuzzle + 1} bypassed`, 'success');
+                addTerminalLine(`> Security Level: ${5 - puzzlesSolved} remaining`, 'success');
+                
+                setTimeout(() => {
+                    currentPuzzle++;
+                    loadPuzzle();
+                }, 1500);
+            } else {
+                addTerminalLine(`> ACCESS DENIED - Invalid response: "${userAnswer}"`, 'error');
+                addTerminalLine(`> Security system alerted - Try again`, 'error');
+                
+                // Shake animation
+                const inputField = document.getElementById('answerInput');
+                inputField.classList.add('shake');
+                setTimeout(() => inputField.classList.remove('shake'), 500);
+                
+                // Penalty time
+                timeLeft = Math.max(0, timeLeft - 5);
+                updateTimerDisplay();
+            }
+            
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+        }
+
+        function skipPuzzle() {
+            timeLeft = Math.max(0, timeLeft - 10);
+            addTerminalLine(`> Protocol ${currentPuzzle + 1} bypassed manually (-10s penalty)`, 'error');
+            updateTimerDisplay();
+            
+            setTimeout(() => {
+                currentPuzzle++;
+                loadPuzzle();
+            }, 1000);
+        }
+
+        function addTerminalLine(text, type = 'prompt') {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function endGame(victory) {
+            clearInterval(timerInterval);
+            const endTime = Date.now();
+            const totalGameTime = Math.round((endTime - startTime) / 1000);
+
+            if (victory) {
+                showScreen('victoryScreen');
+                const timeBonus = timeLeft;
+                document.getElementById('victoryStats').innerHTML = `
+                    <h3>BREACH STATISTICS</h3>
+                    <p>Protocols Bypassed: ${puzzlesSolved}/5</p>
+                    <p>Total Time: ${totalGameTime} seconds</p>
+                    <p>Time Remaining: ${timeLeft} seconds</p>
+                    <p>Efficiency Rating: ${Math.round((puzzlesSolved / totalGameTime) * 100)}%</p>
+                `;
+            } else {
+                showScreen('gameOverScreen');
+                document.getElementById('gameOverStats').innerHTML = `
+                    <h3>BREACH STATISTICS</h3>
+                    <p>Protocols Bypassed: ${puzzlesSolved}/5</p>
+                    <p>Failed on Protocol: ${currentPuzzle + 1}</p>
+                    <p>Total Time: ${totalGameTime} seconds</p>
+                    <p>Security Level: MAXIMUM</p>
+                `;
+            }
+        }
+
+        function restartGame() {
+            showScreen('titleScreen');
+            clearInterval(timerInterval);
+            // Reset terminal
+            document.getElementById('terminal').innerHTML = `
+                <div class="terminal-line prompt">> System Status: ACTIVE</div>
+                <div class="terminal-line prompt">> Security Level: MAXIMUM</div>
+                <div class="terminal-line prompt">> Breach Attempts: 0/5</div>
+                <div class="terminal-line prompt">> Awaiting input...</div>
+            `;
+        }
+
+        // Handle Enter key for answer submission
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('answerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitAnswer();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
